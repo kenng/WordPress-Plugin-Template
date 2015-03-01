@@ -21,8 +21,19 @@ CLASS=${NAME// /_}
 TOKEN=$( tr '[A-Z]' '[a-z]' <<< $CLASS)
 SLUG=${TOKEN//_/-}
 
+EXCLUDE_LIST='--exclude=.git --exclude=README.md --exclude=build-plugin.sh \
+  --exclude=changelog.txt'
+
+if [ "$GRUNT" == "n" ]; then
+	#rm Gruntfile.js
+	#rm package.json
+  EXCLUDE_LIST="$EXCLUDE_LIST --exclude=Gruntfile.js --exclude=package.json"
+fi
+
+
 #git clone git@github.com:hlashbrooke/$DEFAULT_SLUG.git $FOLDER/$SLUG
-cp -rf ../`basename $PWD` $FOLDER/$SLUG
+#cp -rf ../`basename $PWD` $FOLDER/$SLUG
+rsync -rtv ../`basename $PWD`/ $EXCLUDE_LIST $FOLDER/$SLUG
 
 echo "Removing git files..."
 
@@ -30,13 +41,14 @@ mkdir -p $FOLDER
 cd $FOLDER/$SLUG
 
 #rm -rf .git
-rm README.md
-rm build-plugin.sh
-rm changelog.txt
+#rm README.md
+#rm build-plugin.sh
+#rm changelog.txt
 
-if [ "$GRUNT" == "n" ]; then
-	rm Gruntfile.js
-	rm package.json
+if [ $? != 0 ]; then
+  # exit if not successful
+  echo 'Exit as error encountered.'
+  exit 1
 fi
 
 echo "Updating plugin files..."

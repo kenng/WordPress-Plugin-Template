@@ -45,6 +45,12 @@ Using the [taxonomy API](https://github.com/hlashbrooke/WordPress-Plugin-Templat
 
 This will register a new taxonomy with all the standard settings. If you would like to modify the taxonomy settings you can use the `{$taxonomy}_register_args` filter. See [the WordPress codex page](http://codex.wordpress.org/Function_Reference/register_taxonomy) for all available arguments.
 
+## DEBUG
+define a global variable SCRIPT_DEBUG so .min will not be used for script files
+
+`define( 'SCRIPT_DEBUG', true )`
+
+
 ## What does this template give me?
 
 This template includes the following features:

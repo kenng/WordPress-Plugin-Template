@@ -3,7 +3,7 @@
 printf "Plugin name: "
 read NAME
 
-printf "Destination folder: "
+printf "Destination Parent folder: "
 read FOLDER
 
 printf "Include Grunt support (y/n): "
@@ -21,14 +21,15 @@ CLASS=${NAME// /_}
 TOKEN=$( tr '[A-Z]' '[a-z]' <<< $CLASS)
 SLUG=${TOKEN//_/-}
 
-git clone git@github.com:hlashbrooke/$DEFAULT_SLUG.git $FOLDER/$SLUG
+#git clone git@github.com:hlashbrooke/$DEFAULT_SLUG.git $FOLDER/$SLUG
+cp -rf ../`basename $PWD` $FOLDER/$SLUG
 
 echo "Removing git files..."
 
 mkdir -p $FOLDER
 cd $FOLDER/$SLUG
 
-rm -rf .git
+#rm -rf .git
 rm README.md
 rm build-plugin.sh
 rm changelog.txt

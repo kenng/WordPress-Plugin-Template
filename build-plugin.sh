@@ -3,6 +3,9 @@
 printf "Plugin name: "
 read NAME
 
+printf "Author name: "
+read AUTHOR
+
 printf "Destination Parent folder: "
 read FOLDER
 
@@ -12,38 +15,32 @@ read GRUNT
 printf "Initialise new git repo (y/n): "
 read NEWREPO
 
+
 DEFAULT_NAME="WordPress Plugin Template"
 DEFAULT_CLASS=${DEFAULT_NAME// /_}
 DEFAULT_TOKEN=$( tr '[A-Z]' '[a-z]' <<< $DEFAULT_CLASS)
 DEFAULT_SLUG=${DEFAULT_TOKEN//_/-}
+DEFAULT_AUTHOR="Hugh Lashbrooke"
 
 CLASS=${NAME// /_}
 TOKEN=$( tr '[A-Z]' '[a-z]' <<< $CLASS)
 SLUG=${TOKEN//_/-}
+SLUG_DIR=$FOLDER/$SLUG
 
-EXCLUDE_LIST='--exclude=.git --exclude=README.md --exclude=build-plugin.sh \
-  --exclude=changelog.txt'
+
+RSYNC_EXCLUDE_LIST="--exclude=.git --exclude=README.md --exclude=build-plugin.sh --exclude=changelog.txt --exclude=.swp --exclude=$DEFAULT_SLUG.php --exclude=readme.txt --exclude=lang/$DEFAULT_SLUG.pot --exclude=includes/class-$DEFAULT_SLUG.php --exclude=includes/class-$DEFAULT_SLUG-settings.php --exclude=includes/lib/class-$DEFAULT_SLUG-post-type.php --exclude=includes/lib/class-$DEFAULT_SLUG-taxonomy.php --exclude=includes/lib/class-$DEFAULT_SLUG-admin-api.php"
+
 
 if [ "$GRUNT" == "n" ]; then
 	#rm Gruntfile.js
 	#rm package.json
-  EXCLUDE_LIST="$EXCLUDE_LIST --exclude=Gruntfile.js --exclude=package.json"
+  EXCLUDE_LIST="$RSYNC_EXCLUDE_LIST --exclude=Gruntfile.js --exclude=package.json"
 fi
 
 
 #git clone git@github.com:hlashbrooke/$DEFAULT_SLUG.git $FOLDER/$SLUG
 #cp -rf ../`basename $PWD` $FOLDER/$SLUG
 rsync -rtv ../`basename $PWD`/ $EXCLUDE_LIST $FOLDER/$SLUG
-
-echo "Removing git files..."
-
-mkdir -p $FOLDER
-cd $FOLDER/$SLUG
-
-#rm -rf .git
-#rm README.md
-#rm build-plugin.sh
-#rm changelog.txt
 
 if [ $? != 0 ]; then
   # exit if not successful
@@ -53,130 +50,62 @@ fi
 
 echo "Updating plugin files..."
 
-mv $DEFAULT_SLUG.php $SLUG.php
-
-cp $SLUG.php $SLUG.tmp
-sed "s/$DEFAULT_NAME/$NAME/g" $SLUG.tmp > $SLUG.php
-rm $SLUG.tmp
-
-cp $SLUG.php $SLUG.tmp
-sed "s/$DEFAULT_SLUG/$SLUG/g" $SLUG.tmp > $SLUG.php
-rm $SLUG.tmp
-
-cp $SLUG.php $SLUG.tmp
-sed "s/$DEFAULT_TOKEN/$TOKEN/g" $SLUG.tmp > $SLUG.php
-rm $SLUG.tmp
-
-cp $SLUG.php $SLUG.tmp
-sed "s/$DEFAULT_CLASS/$CLASS/g" $SLUG.tmp > $SLUG.php
-rm $SLUG.tmp
-
-cp readme.txt readme.tmp
-sed "s/$DEFAULT_NAME/$NAME/g" readme.tmp > readme.txt
-rm readme.tmp
+sed -e "s/$DEFAULT_NAME/$NAME/g" \
+    -e "s/$DEFAULT_SLUG/$SLUG/g" \
+    -e "s/$DEFAULT_TOKEN/$TOKEN/g" \
+    -e "s/$DEFAULT_CLASS/$CLASS/g" \
+    -e "s/$DEFAULT_AUTHOR/$AUTHOR/g" \
+    $DEFAULT_SLUG.php > $SLUG_DIR/$SLUG.php
 
 
-cd lang
-mv $DEFAULT_SLUG.pot $SLUG.pot
+sed "s/$DEFAULT_NAME/$NAME/g" readme.txt > $SLUG_DIR/readme.txt
 
-cp $SLUG.pot $SLUG.tmp
-sed "s/$DEFAULT_NAME/$NAME/g" $SLUG.tmp > $SLUG.pot
-rm $SLUG.tmp
-
-cp $SLUG.pot $SLUG.tmp
-sed "s/$DEFAULT_CLASS/$CLASS/g" $SLUG.tmp > $SLUG.pot
-rm $SLUG.tmp
-
-cp $SLUG.pot $SLUG.tmp
-sed "s/$DEFAULT_TOKEN/$TOKEN/g" $SLUG.tmp > $SLUG.pot
-rm $SLUG.tmp
-
-cp $SLUG.pot $SLUG.tmp
-sed "s/$DEFAULT_SLUG/$SLUG/g" $SLUG.tmp > $SLUG.pot
-rm $SLUG.tmp
+sed -e "s/$DEFAULT_NAME/$NAME/g" \
+    -e "s/$DEFAULT_CLASS/$CLASS/g" \
+    -e "s/$DEFAULT_TOKEN/$TOKEN/g" \
+    -e "s/$DEFAULT_SLUG/$SLUG/g" \
+    -e "s/$DEFAULT_AUTHOR/$AUTHOR/g" \
+    lang/$DEFAULT_SLUG.pot > $SLUG_DIR/lang/$SLUG.pot
 
 
-cd ../includes
-mv class-$DEFAULT_SLUG.php class-$SLUG.php
+sed -e "s/$DEFAULT_CLASS/$CLASS/g" \
+    -e "s/$DEFAULT_TOKEN/$TOKEN/g" \
+    -e "s/$DEFAULT_SLUG/$SLUG/g" \
+    includes/class-$DEFAULT_SLUG.php > includes/class-$SLUG.php
 
-cp class-$SLUG.php class-$SLUG.tmp
-sed "s/$DEFAULT_CLASS/$CLASS/g" class-$SLUG.tmp > class-$SLUG.php
-rm class-$SLUG.tmp
-
-cp class-$SLUG.php class-$SLUG.tmp
-sed "s/$DEFAULT_TOKEN/$TOKEN/g" class-$SLUG.tmp > class-$SLUG.php
-rm class-$SLUG.tmp
-
-cp class-$SLUG.php class-$SLUG.tmp
-sed "s/$DEFAULT_SLUG/$SLUG/g" class-$SLUG.tmp > class-$SLUG.php
-rm class-$SLUG.tmp
+sed -e "s/$DEFAULT_CLASS/$CLASS/g" \
+    -e "s/$DEFAULT_TOKEN/$TOKEN/g" \
+    -e "s/$DEFAULT_SLUG/$SLUG/g" \
+    includes/class-$DEFAULT_SLUG-settings.php > includes/class-$SLUG-settings.php
 
 
-mv class-$DEFAULT_SLUG-settings.php class-$SLUG-settings.php
+SRC=includes/lib/class-$DEFAULT_SLUG-post-type.php
+DEST=includes/lib/class-$SLUG-post-type.php
+sed -e "s/$DEFAULT_CLASS/$CLASS/g" \
+    -e "s/$DEFAULT_TOKEN/$TOKEN/g" \
+    -e "s/$DEFAULT_SLUG/$SLUG/g" \
+    $SRC > $DEST
 
-cp class-$SLUG-settings.php class-$SLUG-settings.tmp
-sed "s/$DEFAULT_CLASS/$CLASS/g" class-$SLUG-settings.tmp > class-$SLUG-settings.php
-rm class-$SLUG-settings.tmp
+SRC=includes/lib/class-$DEFAULT_SLUG-taxonomy.php
+DEST=includes/lib/class-$SLUG-taxonomy.php
+sed -e "s/$DEFAULT_CLASS/$CLASS/g" \
+    -e "s/$DEFAULT_TOKEN/$TOKEN/g" \
+    -e "s/$DEFAULT_SLUG/$SLUG/g" \
+    $SRC > $DEST
 
-cp class-$SLUG-settings.php class-$SLUG-settings.tmp
-sed "s/$DEFAULT_TOKEN/$TOKEN/g" class-$SLUG-settings.tmp > class-$SLUG-settings.php
-rm class-$SLUG-settings.tmp
-
-cp class-$SLUG-settings.php class-$SLUG-settings.tmp
-sed "s/$DEFAULT_SLUG/$SLUG/g" class-$SLUG-settings.tmp > class-$SLUG-settings.php
-rm class-$SLUG-settings.tmp
-
-
-cd lib
-mv class-$DEFAULT_SLUG-post-type.php class-$SLUG-post-type.php
-
-cp class-$SLUG-post-type.php class-$SLUG-post-type.tmp
-sed "s/$DEFAULT_CLASS/$CLASS/g" class-$SLUG-post-type.tmp > class-$SLUG-post-type.php
-rm class-$SLUG-post-type.tmp
-
-cp class-$SLUG-post-type.php class-$SLUG-post-type.tmp
-sed "s/$DEFAULT_TOKEN/$TOKEN/g" class-$SLUG-post-type.tmp > class-$SLUG-post-type.php
-rm class-$SLUG-post-type.tmp
-
-cp class-$SLUG-post-type.php class-$SLUG-post-type.tmp
-sed "s/$DEFAULT_SLUG/$SLUG/g" class-$SLUG-post-type.tmp > class-$SLUG-post-type.php
-rm class-$SLUG-post-type.tmp
-
-
-mv class-$DEFAULT_SLUG-taxonomy.php class-$SLUG-taxonomy.php
-
-cp class-$SLUG-taxonomy.php class-$SLUG-taxonomy.tmp
-sed "s/$DEFAULT_CLASS/$CLASS/g" class-$SLUG-taxonomy.tmp > class-$SLUG-taxonomy.php
-rm class-$SLUG-taxonomy.tmp
-
-cp class-$SLUG-taxonomy.php class-$SLUG-taxonomy.tmp
-sed "s/$DEFAULT_TOKEN/$TOKEN/g" class-$SLUG-taxonomy.tmp > class-$SLUG-taxonomy.php
-rm class-$SLUG-taxonomy.tmp
-
-cp class-$SLUG-taxonomy.php class-$SLUG-taxonomy.tmp
-sed "s/$DEFAULT_SLUG/$SLUG/g" class-$SLUG-taxonomy.tmp > class-$SLUG-taxonomy.php
-rm class-$SLUG-taxonomy.tmp
-
-
-mv class-$DEFAULT_SLUG-admin-api.php class-$SLUG-admin-api.php
-
-cp class-$SLUG-admin-api.php class-$SLUG-admin-api.tmp
-sed "s/$DEFAULT_CLASS/$CLASS/g" class-$SLUG-admin-api.tmp > class-$SLUG-admin-api.php
-rm class-$SLUG-admin-api.tmp
-
-cp class-$SLUG-admin-api.php class-$SLUG-admin-api.tmp
-sed "s/$DEFAULT_TOKEN/$TOKEN/g" class-$SLUG-admin-api.tmp > class-$SLUG-admin-api.php
-rm class-$SLUG-admin-api.tmp
-
-cp class-$SLUG-admin-api.php class-$SLUG-admin-api.tmp
-sed "s/$DEFAULT_SLUG/$SLUG/g" class-$SLUG-admin-api.tmp > class-$SLUG-admin-api.php
-rm class-$SLUG-admin-api.tmp
-
+SRC=includes/lib/class-$DEFAULT_SLUG-admin-api.php
+DEST=includes/lib/class-$SLUG-admin-api.php
+sed -e "s/$DEFAULT_CLASS/$CLASS/g" \
+    -e "s/$DEFAULT_TOKEN/$TOKEN/g" \
+    -e "s/$DEFAULT_SLUG/$SLUG/g" \
+    $SRC > $DEST
 
 if [ "$NEWREPO" == "y" ]; then
 	echo "Initialising new git repo..."
 	cd ../..
 	git init
 fi
+
+cd $FOLDER/$SLUG
 
 echo "Complete!"
